@@ -1,8 +1,6 @@
 <div align="center">
 
-# Memo — a second brain and AI staff on WhatsApp
-
-**Live app:** [https://memo-cioe.onrender.com](https://memo-cioe.onrender.com)
+# Memo - second brain on WhatsApp
 
 _Every conversation remembered. Every decision stored. Tasks, reminders, and relationships tracked — through the channel your team already uses._
 

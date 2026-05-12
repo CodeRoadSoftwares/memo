@@ -1,3 +1,24 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .font-fancy {
+    font-family: 'Playfair Display', serif !important;
+  }
+  .font-title {
+    font-family: 'Outfit', sans-serif !important;
+  }
+  .font-body {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 *,
 *::before,
 *::after {
@@ -13,10 +34,9 @@ body,
 }
 
 body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #111b21;
-  color: #e9edef;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  background: #ffffff;
+  color: #0f172a;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
 }

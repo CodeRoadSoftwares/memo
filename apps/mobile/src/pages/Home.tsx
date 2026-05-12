@@ -7,7 +7,6 @@ import {
   UserRoundCheck,
   Megaphone,
   FileScan,
-  Brain,
   Bot,
   Zap,
   MessageSquareQuote,

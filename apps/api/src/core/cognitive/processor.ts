@@ -31,6 +31,7 @@ const CognitiveExtractionSchema = z.object({
           .optional()
           .transform((val) => val ?? []),
         scheduledFor: z.string().nullable().optional(),
+        recurrence: z.string().nullable().optional(),
         query: z.string().nullable().optional(),
         mutations: z.record(z.string(), z.any()).nullable().optional(),
       }),
@@ -385,12 +386,14 @@ ${JSON.stringify(
       title: a.title,
       status: a.status,
       scheduledFor: a.scheduledFor,
+      recurrence: (a as any).recurrence,
     })),
     recentlyCompletedActions: context.recentlyCompletedActions.map((a, i) => ({
       index: i + 1,
       id: a.id,
       type: a.type,
       title: a.title,
+      recurrence: (a as any).recurrence,
     })),
     relevantMemories: context.relevantMemories,
     relevantEntities: context.relevantEntities,
@@ -418,6 +421,7 @@ RULES:
 16. ENTITIES: Whenever the user introduces, updates, or mentions people, products, systems, organizations, or key entities, ALWAYS extract them into the "entities" array with their type, name, and any descriptive metadata (e.g. {"description": "..."}). Do not skip extracting entities.
 17. PRONOUN RESOLUTION: If the user uses pronouns or relative terms (e.g., "who is he", "explain this", "delete it", "complete them", "who is this"), you MUST resolve these pronouns using the "repliedToMessage" text as the PRIMARY source of context. If the "repliedToMessage" mentions specific entities (like "Mouzin", "CodeRoad Softwares") and the user asks "And who is this?", they are asking about the entities inside the "repliedToMessage" itself (such as "Mouzin"). You MUST NOT answer about a previous topic (like "Mudasir") if that previous topic is completely absent from the "repliedToMessage". Use "recentConversation" history only as a secondary fallback. For example, if "repliedToMessage" is "Who is mudasir" and the user says "Who is he?", "he" refers to "mudasir".
 18. ACTION MUTATIONS: When creating or updating an action, ALWAYS use the "mutations" object to store any extra descriptive details, context, notes, issues, people involved, or variables from the user's message (e.g. {"description": "details...", "client": "details of client..."}). Do not lose this context. This is crucial for keeping our actions fully descriptive and complete.
+19. RECURRENCE: If the user mentions a recurring frequency (e.g., "every day", "weekly", "every monday", "daily", "every month", "monthly"), populate the "recurrence" field with values like "daily", "weekly", "monthly", "every X days", "every X weeks", "every X months", "every monday", "every friday", etc. Do not fill recurrence if it's a one-time event.
 
 ${skillRulesSection ? `ACTIVE SKILLS SPECIFIC EXECUTION RULES:\n${skillRulesSection}` : ""}
 
@@ -428,7 +432,7 @@ Input: "${text}"
 
 Return ONLY valid JSON matching this schema:
 {
-  "actions": [{ "operation": "create"|"update"|"delete"|"complete"|"reopen"|"query", "type": ${entitiesString}, "title": string|null, "resolvedIds": string[], "scheduledFor": string|null, "query": string|null, "mutations": object|null }],
+  "actions": [{ "operation": "create"|"update"|"delete"|"complete"|"reopen"|"query", "type": ${entitiesString}, "title": string|null, "resolvedIds": string[], "scheduledFor": string|null, "recurrence": string|null, "query": string|null, "mutations": object|null }],
   "entities": [{ "type": string, "name": string, "metadata": {} }],
   "memories": [{ "category": ${memoriesString}, "content": string, "entityName": string|null, "entityType": string|null, "importance": number }],
   "response": string,

@@ -4,8 +4,8 @@ import { getSession, WorkingMemory } from "./session.js";
 export interface ContextPackage {
   repliedToMessage: { text: string } | null;
   recentConversation: { role: string; message: string; createdAt: Date }[];
-  pendingActions: { id: string; type: string; title: string; status: string; scheduledFor: Date | null }[];
-  recentlyCompletedActions: { id: string; type: string; title: string; completedAt: Date | null }[];
+  pendingActions: { id: string; type: string; title: string; status: string; scheduledFor: Date | null; recurrence?: string | null }[];
+  recentlyCompletedActions: { id: string; type: string; title: string; completedAt: Date | null; recurrence?: string | null }[];
   relevantMemories: { id: string; category: string; content: string }[];
   relevantEntities: { id: string; type: string; name: string; metadata: any }[];
   workingMemory: WorkingMemory;
@@ -68,14 +68,14 @@ export async function buildContext(userId: string, userPhone: string, text: stri
     where: { userId, status: "pending" },
     orderBy: { createdAt: "desc" },
     take: 30,
-    select: { id: true, type: true, title: true, status: true, scheduledFor: true },
+    select: { id: true, type: true, title: true, status: true, scheduledFor: true, recurrence: true },
   });
 
   const recentlyCompletedActions = await prisma.action.findMany({
     where: { userId, status: "completed" },
     orderBy: { completedAt: "desc" },
     take: 5,
-    select: { id: true, type: true, title: true, completedAt: true },
+    select: { id: true, type: true, title: true, completedAt: true, recurrence: true },
   });
 
   let relevantMemories: { id: string; category: string; content: string }[] = [];

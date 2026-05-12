@@ -8,6 +8,7 @@ interface ActionInstruction {
   title?: string | null;
   resolvedIds?: string[];
   scheduledFor?: string | null;
+  recurrence?: string | null;
   query?: string | null;
   mutations?: Record<string, any> | null;
 }
@@ -75,12 +76,14 @@ async function handleCreate(userId: string, userPhone: string, messageId: string
       status: "pending",
       sourceMessageId: messageId,
       scheduledFor: parsedDate || undefined,
+      recurrence: action.recurrence || null,
       payload: action.mutations || {},
     },
   });
 
   if (parsedDate) {
-    console.log(`⏰ [Action] Created scheduled ${actionType}: "${actionTitle}" for ${parsedDate.toISOString()}`);
+    const recStr = action.recurrence ? ` [Recurrence: ${action.recurrence}]` : "";
+    console.log(`⏰ [Action] Created scheduled ${actionType}: "${actionTitle}" for ${parsedDate.toISOString()}${recStr}`);
   } else {
     console.log(`✅ [Action] Created ${actionType}: "${created.title}"`);
   }

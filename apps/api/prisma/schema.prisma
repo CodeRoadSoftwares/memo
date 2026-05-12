@@ -226,6 +226,8 @@ model Action {
   payload         Json?
   scheduledFor    DateTime?
   completedAt     DateTime?
+  recurrence      String?
+  parentActionId  String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -233,6 +235,7 @@ model Action {
   @@index([userId, type, status])
   @@index([userId, status])
   @@index([scheduledFor, status])
+  @@index([parentActionId])
 }
 
 // Interaction timeline for conversation context

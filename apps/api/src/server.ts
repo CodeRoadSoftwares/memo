@@ -6,6 +6,10 @@ import { authRoutes } from "./modules/auth/routes.js";
 import { skillRoutes } from "./modules/skills/routes.js";
 import { phoneNumberRoutes } from "./modules/phoneNumbers/routes.js";
 import { telegramRoutes } from "./modules/telegram/routes.js";
+import { memoryRoutes } from "./modules/memories/routes.js";
+import { entityRoutes } from "./modules/entities/routes.js";
+import { relationshipRoutes } from "./modules/relationships/routes.js";
+import { actionRoutes } from "./modules/actions/routes.js";
 import cookie from "@fastify/cookie";
 
 const app = Fastify({
@@ -32,6 +36,10 @@ app.register(skillRoutes);
 app.register(whatsappRoutes);
 app.register(phoneNumberRoutes);
 app.register(telegramRoutes);
+app.register(memoryRoutes);
+app.register(entityRoutes);
+app.register(relationshipRoutes);
+app.register(actionRoutes);
 
 app.get("/", async () => {
   return {
@@ -95,7 +103,9 @@ const start = async () => {
     try {
       await import("./core/queue/cognitiveQueue.js");
       await import("./core/queue/mediaQueue.js");
-      console.log("[Startup] Background Task Workers activated (Cognitive + Media).");
+      console.log(
+        "[Startup] Background Task Workers activated (Cognitive + Media).",
+      );
     } catch (qErr) {
       console.error("[Startup] Failed to ignite task queue worker:", qErr);
     }

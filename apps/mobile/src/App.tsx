@@ -10,6 +10,7 @@ import PhoneNumbers from "./pages/PhoneNumbers";
 import Skills from "./pages/Skills";
 import LinkTelegram from "./pages/LinkTelegram";
 import Dashboard from "./pages/Dashboard";
+import KnowledgeBase from "./pages/KnowledgeBase";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -93,6 +94,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Skills />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/data"
+        element={
+          <ProtectedRoute>
+            <KnowledgeBase />
           </ProtectedRoute>
         }
       />

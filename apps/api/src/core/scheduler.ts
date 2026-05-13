@@ -270,6 +270,8 @@ function calculateNextRecurrence(currentDate: Date, rule: string): Date | null {
       d.setFullYear(d.getFullYear() + 1);
     } else if (normalized === "hourly" || normalized === "every hour") {
       d.setHours(d.getHours() + 1);
+    } else if (normalized === "minutely" || normalized === "every minute") {
+      d.setMinutes(d.getMinutes() + 1);
     } else if (
       normalized === "every weekday" ||
       normalized === "weekdays" ||

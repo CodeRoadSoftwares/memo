@@ -108,6 +108,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     return reply.status(201).send({
       user,
+      token,
     });
   });
 
@@ -161,6 +162,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         apiKey: user.apiKey,
         createdAt: user.createdAt,
       },
+      token,
     });
   });
 

@@ -18,7 +18,7 @@ export default function SignUp() {
     setLoading(true);
     try {
       const { data } = await signUp(form);
-      login(data.user);
+      login(data.user, data.token);
       navigate("/");
     } catch (err: unknown) {
       const msg =

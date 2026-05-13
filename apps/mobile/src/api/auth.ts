@@ -21,6 +21,7 @@ export interface ApiUser {
 
 export interface AuthResponse {
   user: ApiUser;
+  token: string;
 }
 
 export const signUp = (data: SignUpPayload) =>

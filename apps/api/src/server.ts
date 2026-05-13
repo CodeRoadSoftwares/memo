@@ -74,6 +74,14 @@ const start = async () => {
       console.error("[Startup] Error auto-reconnecting sessions:", startupErr);
     }
 
+    // Start the Telegram Bot service
+    try {
+      const { startTelegramBot } = await import("./core/telegram/bot.js");
+      await startTelegramBot();
+    } catch (tgErr) {
+      console.error("[Startup] Failed to start Telegram bot:", tgErr);
+    }
+
     // Start the Reminder Engine Cron Job Scheduler
     try {
       const { startReminderScheduler } = await import("./core/scheduler.js");

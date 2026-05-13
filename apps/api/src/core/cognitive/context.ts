@@ -55,10 +55,38 @@ export async function buildContext(userId: string, userPhone: string, text: stri
     } catch (err) {
       console.error("[Context] Failed to lookup rich quoted message context:", err);
     }
+  } else if (rawPayload?.reply_to_message?.message_id) {
+    const tgMsgId = String(rawPayload.reply_to_message.message_id);
+    try {
+      const matches = await prisma.$queryRawUnsafe<any[]>(
+         `SELECT id, text, "processedText", type, "storageKey" FROM "Message" 
+          WHERE "userId" = $1 AND "platform" = 'telegram' AND ("rawPayload"->>'message_id' = $2) LIMIT 1`,
+         userId,
+         tgMsgId
+      );
+
+      const originalMessage = matches && matches.length > 0 ? matches[0] : null;
+
+      if (originalMessage) {
+        repliedToMessage = {
+           id: originalMessage.id,
+           text: originalMessage.text || "",
+           processedText: originalMessage.processedText,
+           type: originalMessage.type,
+           storageKey: originalMessage.storageKey
+        };
+      } else {
+         const replyMsg = rawPayload.reply_to_message;
+         let fallbackText = replyMsg.text || replyMsg.caption || null;
+         if (fallbackText) repliedToMessage = { text: fallbackText };
+      }
+    } catch (err) {
+      console.error("[Context] Failed Telegram rich quoted message lookup:", err);
+    }
   }
 
   const recentConversation = await prisma.conversationEvent.findMany({
-    where: { userPhone },
+    where: { userId },
     orderBy: { createdAt: "desc" },
     take: 20,
     select: { role: true, message: true, createdAt: true },
@@ -103,7 +131,7 @@ export async function buildContext(userId: string, userPhone: string, text: stri
     console.warn("[Context] Skipping semantic search fetch.", err);
   }
 
-  const workingMemory = await getSession(userPhone);
+  const workingMemory = await getSession(userId);
 
   const now = new Date();
   return {

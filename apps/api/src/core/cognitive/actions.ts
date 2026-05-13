@@ -24,6 +24,7 @@ export interface ActionResults {
 export async function executeActions(
   userId: string,
   userPhone: string,
+  platform: string,
   messageId: string,
   actions: ActionInstruction[],
   workingMemory: WorkingMemory,
@@ -35,7 +36,7 @@ export async function executeActions(
   for (const action of actions) {
     switch (action.operation) {
       case "create":
-        await handleCreate(userId, userPhone, messageId, action, wm);
+        await handleCreate(userId, userPhone, platform, messageId, action, wm);
         break;
       case "complete":
         await handleComplete(userId, action, wm);
@@ -58,7 +59,14 @@ export async function executeActions(
   return { updatedWorkingMemory: wm, queryData };
 }
 
-async function handleCreate(userId: string, userPhone: string, messageId: string, action: ActionInstruction, wm: WorkingMemory) {
+async function handleCreate(
+  userId: string, 
+  userPhone: string, 
+  platform: string,
+  messageId: string, 
+  action: ActionInstruction, 
+  wm: WorkingMemory
+) {
   const actionTitle = action.title || "Untitled";
   const actionType = action.type;
   let parsedDate: Date | null = null;
@@ -70,7 +78,9 @@ async function handleCreate(userId: string, userPhone: string, messageId: string
   const created = await prisma.action.create({
     data: {
       userId,
-      userPhone,
+      platform,
+      userPhone: platform === "whatsapp" ? userPhone : null,
+      telegramChatId: platform === "telegram" ? userPhone : null,
       type: actionType,
       title: actionTitle,
       status: "pending",

@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { prisma } from "./db/prisma.js";
-import { sendWhatsAppMessage, sendMessageToRecipient } from "./whatsapp/connection.js";
+import { sendMessageToRecipient } from "./whatsapp/connection.js";
+import { sendUnifiedMessage } from "./messaging.js";
 
 export function startReminderScheduler() {
   console.log("⏰ [Scheduler] Starting Action Scheduler (runs every minute)...");
@@ -18,7 +19,9 @@ export function startReminderScheduler() {
         select: {
           id: true,
           userId: true,
+          platform: true,
           userPhone: true,
+          telegramChatId: true,
           type: true,
           title: true,
           payload: true,
@@ -45,6 +48,8 @@ export function startReminderScheduler() {
 
           const payload = (action.payload || {}) as any;
 
+          const targetId = action.platform === "telegram" ? action.telegramChatId : action.userPhone;
+
           if (action.type === "scheduled_message" || action.type === "send_message") {
             const recipientPhone = payload.recipientPhone;
             const messageContent = payload.messageText || action.title;
@@ -60,19 +65,19 @@ export function startReminderScheduler() {
             notificationText = `📤 *Scheduled Message Sent:* To ${payload.recipientName || recipientPhone}: "${messageContent}"`;
             
             // Inform the user that their scheduled message went out
-            if (success && action.userPhone) {
-               await sendWhatsAppMessage(action.userPhone, `✅ System has successfully delivered your scheduled message to *${payload.recipientName || recipientPhone}*: "${messageContent}"`);
+            if (success && targetId) {
+               await sendUnifiedMessage(action.platform, targetId, `✅ System has successfully delivered your scheduled message to *${payload.recipientName || recipientPhone}*: "${messageContent}"`);
             }
           } else {
             // Default behavior: Regular Reminders sent BACK to the user
-            if (!action.userPhone) {
-              console.warn(`⏰ [Scheduler] Action ${action.id} has no userPhone, skipping.`);
+            if (!targetId) {
+              console.warn(`⏰ [Scheduler] Action ${action.id} has no destination address (userPhone/telegramChatId) on platform ${action.platform}, skipping.`);
               continue;
             }
 
-            console.log(`⏰ [Scheduler] Executing ${action.type}: "${action.title}" for ${action.userPhone}...`);
+            console.log(`⏰ [Scheduler] Executing ${action.type}: "${action.title}" for ${targetId} on platform ${action.platform}...`);
             notificationText = `⏰ *Reminder:* ${action.title}`;
-            success = await sendWhatsAppMessage(action.userPhone, notificationText);
+            success = await sendUnifiedMessage(action.platform, targetId, notificationText);
           }
 
           await prisma.action.update({
@@ -80,10 +85,10 @@ export function startReminderScheduler() {
             data: { status: success ? "completed" : "failed", completedAt: success ? new Date() : undefined },
           });
 
-          if (success && action.userPhone) {
+          if (success && targetId) {
             // Store the event in conversation log for user context
             await prisma.conversationEvent.create({
-              data: { userId: action.userId, userPhone: action.userPhone, role: "assistant", message: notificationText },
+              data: { userId: action.userId, userPhone: targetId, role: "assistant", message: notificationText },
             });
           }
 
@@ -95,7 +100,9 @@ export function startReminderScheduler() {
               await prisma.action.create({
                 data: {
                   userId: action.userId,
+                  platform: action.platform,
                   userPhone: action.userPhone,
+                  telegramChatId: action.telegramChatId,
                   type: action.type,
                   title: action.title,
                   status: "pending",

@@ -6,9 +6,10 @@ import { executeActions, storeMemories, upsertEntities } from "./actions.js";
 import { generateQueryResponse } from "./response.js";
 import { updateSession, WorkingMemory } from "./session.js";
 import {
-  sendWhatsAppMessage,
-  sendWhatsAppPresence,
-} from "../whatsapp/connection.js";
+  sendUnifiedMessage,
+  sendUnifiedPresence,
+  sendUnifiedMedia,
+} from "../messaging.js";
 
 // Schema definition
 const CognitiveExtractionSchema = z.object({
@@ -91,11 +92,11 @@ export async function processCognitiveEvent(
 
   const msg = await prisma.message.findUnique({
     where: { id: messageId },
-    select: { userId: true, userPhone: true, rawPayload: true, createdAt: true },
+    select: { userId: true, userPhone: true, platform: true, rawPayload: true, createdAt: true },
   });
   if (!msg) return;
 
-  const { userId, userPhone, rawPayload } = msg;
+  const { userId, userPhone, platform, rawPayload } = msg;
 
   try {
     console.log(`\n🧠 [Cognitive] Processing: "${text}"`);
@@ -124,7 +125,7 @@ Please configure at least one skill to start interacting.`;
       console.log(
         `🧠 [Cognitive] Blocked processing: No skills configured for user ${userId}`,
       );
-      await sendWhatsAppMessage(userPhone, replyMsg);
+      await sendUnifiedMessage(platform, userPhone, replyMsg);
       await storeAssistantEvent(userId, userPhone, replyMsg);
       return;
     }
@@ -169,17 +170,17 @@ Please configure at least one skill to start interacting.`;
         ...context.workingMemory,
         pendingClarification: { type: "clarify", originalData: extraction },
       };
-      await updateSession(userId, userPhone, wm);
-      await sendWhatsAppMessage(userPhone, extraction.response, activeQuote);
+      await updateSession(userId, wm);
+      await sendUnifiedMessage(platform, userPhone, extraction.response, activeQuote);
       await storeAssistantEvent(userId, userPhone, extraction.response);
-      await sendWhatsAppPresence(userPhone, "paused").catch(() => {});
+      await sendUnifiedPresence(platform, userPhone, "paused").catch(() => {});
       return;
     }
 
     // Clear pending clarification if it existed
     if (context.workingMemory.pendingClarification) {
       delete context.workingMemory.pendingClarification;
-      await updateSession(userId, userPhone, context.workingMemory);
+      await updateSession(userId, context.workingMemory);
     }
 
 
@@ -193,6 +194,7 @@ Please configure at least one skill to start interacting.`;
       const actionResults = await executeActions(
         userId,
         userPhone,
+        platform,
         messageId,
         extraction.actions,
         context.workingMemory,
@@ -203,20 +205,18 @@ Please configure at least one skill to start interacting.`;
       if (actionResults.updatedWorkingMemory) {
         await updateSession(
           userId,
-          userPhone,
           actionResults.updatedWorkingMemory,
         );
       }
  
 
       if (hasQueryAction && actionResults.queryData) {
-        await sendWhatsAppPresence(userPhone, "composing").catch(() => {});
+        await sendUnifiedPresence(platform, userPhone, "composing").catch(() => {});
 
         if (actionResults.queryData.type === "media_retrieval") {
           if (actionResults.queryData.found) {
-            const { sendWhatsAppMedia } =
-              await import("../whatsapp/connection.js");
-            const success = await sendWhatsAppMedia(
+            const success = await sendUnifiedMedia(
+              platform,
               userPhone,
               actionResults.queryData.storageKey,
               actionResults.queryData.mimeType,
@@ -256,18 +256,18 @@ Please configure at least one skill to start interacting.`;
     const finalResponse = queryResults || extraction.response;
     if (finalResponse && finalResponse.trim()) {
       // Pass activeQuote conditionally computed above based on queue state
-      await sendWhatsAppMessage(userPhone, finalResponse, activeQuote);
+      await sendUnifiedMessage(platform, userPhone, finalResponse, activeQuote);
       await storeAssistantEvent(userId, userPhone, finalResponse);
     }
 
-    await sendWhatsAppPresence(userPhone, "paused").catch(() => {});
+    await sendUnifiedPresence(platform, userPhone, "paused").catch(() => {});
   } catch (err: any) {
     console.error(`🧠 [Cognitive] Pipeline failed:`, err.message || err);
     
     if (!isRetry) {
        try {
          const warning = "⚠️ Our AI intelligence backend is currently overloaded or unavailable. I have queued your request for automated retry and will process it as soon as capacity returns.";
-         await sendWhatsAppMessage(userPhone, warning);
+         await sendUnifiedMessage(platform, userPhone, warning);
        } catch (notifyErr) {
          console.error("[Cognitive] Failed to send overloaded warning:", notifyErr);
        }

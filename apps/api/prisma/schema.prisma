@@ -14,6 +14,8 @@ model User {
   phone           String              @unique
   name            String?
   password        String?
+  telegramChatId  String?             @unique
+  telegramUsername String?
   createdAt       DateTime            @default(now())
   messages        Message[]
   phoneNumbers    UserPhoneNumber[]
@@ -24,7 +26,7 @@ model User {
   relationships   Relationship[]
   actions         Action[]
   conversationEvents ConversationEvent[]
-  cognitiveSessions CognitiveSession[]
+  cognitiveSession CognitiveSession?
 }
 
 model WhatsAppSession {
@@ -217,7 +219,9 @@ model Relationship {
 model Action {
   id              String    @id @default(cuid())
   userId          String
+  platform        String    @default("whatsapp")
   userPhone       String?
+  telegramChatId  String?
   type            String
   title           String
   status          String    @default("pending")
@@ -256,8 +260,7 @@ model ConversationEvent {
 // Short-term working memory per phone conversation
 model CognitiveSession {
   id            String   @id @default(cuid())
-  userId        String
-  userPhone     String   @unique
+  userId        String   @unique
   workingMemory Json
   expiresAt     DateTime
   updatedAt     DateTime @updatedAt

@@ -9,6 +9,7 @@ import LinkWhatsApp from "./pages/LinkWhatsApp";
 import PhoneNumbers from "./pages/PhoneNumbers";
 import Skills from "./pages/Skills";
 import LinkTelegram from "./pages/LinkTelegram";
+import Dashboard from "./pages/Dashboard";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -28,7 +29,7 @@ function HomeRoute() {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? (
     <AppLayout>
-      <Home />
+      <Dashboard />
     </AppLayout>
   ) : (
     <Home />

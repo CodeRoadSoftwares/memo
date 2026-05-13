@@ -1,6 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import "./SideNav.css";
 
 const tabs = [
   {
@@ -98,19 +97,27 @@ export default function SideNav() {
   };
 
   return (
-    <aside className="side-nav">
-      <div className="side-nav-logo">
-        <div className="side-nav-logo-icon">💬</div>
-        <span>Memo</span>
+    <aside className="w-64 h-screen sticky top-0 flex flex-col bg-white/80 backdrop-blur-xl border-r border-slate-200/60 shadow-[4px_0_24px_rgba(148,163,184,0.05)] font-title z-50">
+      {/* Logo Row */}
+      <div className="flex items-center gap-3 px-6 py-8">
+        <div className="text-2xl filter drop-shadow-[0_2px_8px_rgba(16,185,129,0.3)]">💬</div>
+        <span className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-700">
+          Memo
+        </span>
       </div>
 
-      <nav className="side-nav-links">
+      {/* Navigation Links */}
+      <nav className="flex-1 flex flex-col gap-1.5 px-4 py-2">
         {tabs.map((tab) => (
           <NavLink
             key={tab.to}
             to={tab.to}
             className={({ isActive }) =>
-              `side-nav-item${isActive ? " active" : ""}`
+              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold border transition-all duration-200 ${
+                isActive
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/50 shadow-sm shadow-emerald-100 translate-x-1"
+                  : "bg-transparent text-slate-600 border-transparent hover:bg-slate-100/70 hover:text-slate-900 hover:translate-x-1"
+              }`
             }
           >
             {tab.icon}
@@ -119,28 +126,34 @@ export default function SideNav() {
         ))}
       </nav>
 
-      <div className="side-nav-footer">
-        <div className="side-nav-user">
-          <div className="side-nav-avatar">
-            {user?.name?.[0]?.toUpperCase()}
+      {/* User Info Footer */}
+      <div className="flex items-center justify-between gap-3 p-4 border-t border-slate-100 bg-slate-50/40 backdrop-blur-sm">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white text-[15px] font-black flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-200/50">
+            {user?.name?.[0]?.toUpperCase() || "U"}
           </div>
-          <div className="side-nav-user-info">
-            <span className="side-nav-user-name">{user?.name}</span>
-            <span className="side-nav-user-phone">{user?.phone}</span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-extrabold text-slate-900 truncate leading-tight">
+              {user?.name || "Explorer"}
+            </span>
+            <span className="text-[11px] font-bold text-slate-500 truncate mt-0.5">
+              {user?.phone || "Active Session"}
+            </span>
           </div>
         </div>
+        
         <button
-          className="side-nav-logout"
+          className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-100/50 text-rose-500 flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:bg-rose-500 hover:text-white hover:shadow-lg hover:shadow-rose-200 active:scale-95"
           onClick={handleLogout}
           title="Logout"
         >
           <svg
-            width="18"
-            height="18"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
           >
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />

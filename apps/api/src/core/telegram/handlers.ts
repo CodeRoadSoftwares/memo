@@ -21,37 +21,55 @@ export async function registerTelegramHandlers() {
   bot.command("link", async (ctx) => {
     const args = ctx.message.text.split(" ");
     if (args.length < 2) {
-      return ctx.reply("⚠️ Usage: `/link YOUR_API_KEY`\nGet your API Key from the profile section in the web client.");
+      return ctx.reply(
+        "⚠️ Usage: `/link YOUR_API_KEY`\nGet your API Key from the profile section in the web client.",
+      );
     }
 
     const apiKey = args[1].trim();
     try {
       const user = await prisma.user.findUnique({ where: { apiKey } });
       if (!user) {
-        return ctx.reply("❌ Invalid API key provided. Please double check and try again.");
+        return ctx.reply(
+          "❌ Invalid API key provided. Please double check and try again.",
+        );
       }
 
       const chatId = ctx.chat.id.toString();
       const username = ctx.from?.username || null;
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { telegramChatId: chatId, telegramUsername: username }
+      // Reassign binding safely if this Telegram account was previously bound to an alternate user record
+      await prisma.user.updateMany({
+        where: { telegramChatId: chatId },
+        data: { telegramChatId: null, telegramUsername: null },
       });
 
-      return ctx.reply(`🎉 Successfully linked! Welcome to Memo, ${user.name || "User"}. You can now message me directly!`);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { telegramChatId: chatId, telegramUsername: username },
+      });
+
+      return ctx.reply(
+        `🎉 Successfully linked! Welcome to Memo, ${user.name || "User"}. You can now message me directly!`,
+      );
     } catch (err) {
       console.error("[Telegram Handlers] Link command failure:", err);
-      return ctx.reply("❌ Encountered an unexpected issue linking your account. Please contact support.");
+      return ctx.reply(
+        "❌ Encountered an unexpected issue linking your account. Please contact support.",
+      );
     }
   });
 
   // Handle text messages
   bot.on(message("text"), async (ctx) => {
     const chatId = ctx.chat.id.toString();
-    const user = await prisma.user.findUnique({ where: { telegramChatId: chatId } });
+    const user = await prisma.user.findUnique({
+      where: { telegramChatId: chatId },
+    });
     if (!user) {
-      return ctx.reply("⚠️ You haven't linked your Telegram account yet. Please send `/link YOUR_API_KEY` to begin.");
+      return ctx.reply(
+        "⚠️ You haven't linked your Telegram account yet. Please send `/link YOUR_API_KEY` to begin.",
+      );
     }
 
     const text = ctx.message.text;
@@ -65,7 +83,8 @@ export async function registerTelegramHandlers() {
       if (replyTo.text) quotedText = replyTo.text;
       else if (replyTo.caption) quotedText = replyTo.caption;
       else if (replyTo.photo) quotedText = "[Image Message]";
-      else if (replyTo.document) quotedText = `[Document: ${replyTo.document.file_name || "unnamed"}]`;
+      else if (replyTo.document)
+        quotedText = `[Document: ${replyTo.document.file_name || "unnamed"}]`;
       else if (replyTo.voice || replyTo.audio) quotedText = "[Audio Message]";
       else if (replyTo.video) quotedText = "[Video Message]";
 
@@ -83,7 +102,7 @@ export async function registerTelegramHandlers() {
           type: "text",
           text: contextText,
           rawPayload: ctx.message as any,
-        }
+        },
       });
 
       await ctx.sendChatAction("typing");
@@ -115,17 +134,21 @@ export async function registerTelegramHandlers() {
 
           if (batch.messageIds.length > 1) {
             await prisma.message.deleteMany({
-              where: { id: { in: batch.messageIds.slice(1) } }
+              where: { id: { in: batch.messageIds.slice(1) } },
             });
           }
 
-          await cognitiveQueue.add("process-text", { messageId: primaryId, text: combined });
-          console.log(`🚀 [Telegram Queue] Enqueued batched text for telegram: ${primaryId}`);
+          await cognitiveQueue.add("process-text", {
+            messageId: primaryId,
+            text: combined,
+          });
+          console.log(
+            `🚀 [Telegram Queue] Enqueued batched text for telegram: ${primaryId}`,
+          );
         } catch (err) {
           console.error("[Telegram Handlers] Failed debouncing batch:", err);
         }
       }, 3000);
-
     } catch (err) {
       console.error("[Telegram Handlers] Text ingestion failed:", err);
     }
@@ -134,9 +157,13 @@ export async function registerTelegramHandlers() {
   // Handle audio messages
   bot.on([message("voice"), message("audio")], async (ctx) => {
     const chatId = ctx.chat.id.toString();
-    const user = await prisma.user.findUnique({ where: { telegramChatId: chatId } });
+    const user = await prisma.user.findUnique({
+      where: { telegramChatId: chatId },
+    });
     if (!user) {
-      return ctx.reply("⚠️ Please link your account first using `/link YOUR_API_KEY`.");
+      return ctx.reply(
+        "⚠️ Please link your account first using `/link YOUR_API_KEY`.",
+      );
     }
 
     const msg: any = ctx.message;
@@ -163,15 +190,19 @@ export async function registerTelegramHandlers() {
           text: "[Telegram Voice Message]",
           mimeType,
           storageKey,
-          rawPayload: msg
-        }
+          rawPayload: msg,
+        },
       });
 
-      console.log("🔊 [Telegram Handlers] Dispatched to transcription pipeline.");
+      console.log(
+        "🔊 [Telegram Handlers] Dispatched to transcription pipeline.",
+      );
       transcribeAudio(savedMsg.id, buffer, ext).catch((err) => {
-         console.error("[Telegram Handlers] Transcription pipeline failure:", err);
+        console.error(
+          "[Telegram Handlers] Transcription pipeline failure:",
+          err,
+        );
       });
-
     } catch (err) {
       console.error("[Telegram Handlers] Audio handling failed:", err);
     }
@@ -180,7 +211,9 @@ export async function registerTelegramHandlers() {
   // Handle images
   bot.on(message("photo"), async (ctx) => {
     const chatId = ctx.chat.id.toString();
-    const user = await prisma.user.findUnique({ where: { telegramChatId: chatId } });
+    const user = await prisma.user.findUnique({
+      where: { telegramChatId: chatId },
+    });
     if (!user) return ctx.reply("⚠️ Please link your account first.");
 
     const msg = ctx.message;
@@ -207,14 +240,13 @@ export async function registerTelegramHandlers() {
           text: caption,
           mimeType,
           storageKey,
-          rawPayload: msg as any
-        }
+          rawPayload: msg as any,
+        },
       });
 
-      runOcrOnMedia(savedMsg.id, buffer, "jpg").catch(err => {
+      runOcrOnMedia(savedMsg.id, buffer, "jpg").catch((err) => {
         console.error("[Telegram Handlers] OCR pipeline failure:", err);
       });
-
     } catch (err) {
       console.error("[Telegram Handlers] Photo handling failed:", err);
     }
@@ -223,7 +255,9 @@ export async function registerTelegramHandlers() {
   // Handle documents
   bot.on(message("document"), async (ctx) => {
     const chatId = ctx.chat.id.toString();
-    const user = await prisma.user.findUnique({ where: { telegramChatId: chatId } });
+    const user = await prisma.user.findUnique({
+      where: { telegramChatId: chatId },
+    });
     if (!user) return ctx.reply("⚠️ Please link your account first.");
 
     const msg = ctx.message;
@@ -251,14 +285,16 @@ export async function registerTelegramHandlers() {
           text: msg.caption || filename,
           mimeType,
           storageKey,
-          rawPayload: msg as any
-        }
+          rawPayload: msg as any,
+        },
       });
 
-      runOcrOnMedia(savedMsg.id, buffer, ext).catch(err => {
-        console.error("[Telegram Handlers] OCR pipeline failed for document:", err);
+      runOcrOnMedia(savedMsg.id, buffer, ext).catch((err) => {
+        console.error(
+          "[Telegram Handlers] OCR pipeline failed for document:",
+          err,
+        );
       });
-
     } catch (err) {
       console.error("[Telegram Handlers] Document ingest failed:", err);
     }

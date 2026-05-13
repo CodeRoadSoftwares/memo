@@ -7,7 +7,6 @@ import {
   Smartphone, 
   Cpu, 
   Zap, 
-  CheckCircle2, 
   AlertCircle, 
   ChevronRight, 
   Clock,

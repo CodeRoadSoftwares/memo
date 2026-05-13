@@ -5,7 +5,7 @@ import {
   deletePhoneNumber,
 } from "../api/phoneNumbers";
 import type { PhoneNumber } from "../api/phoneNumbers";
-import { Smartphone, Trash2, Plus, Loader2 } from "lucide-react";
+import { Smartphone, Trash2, Plus, Loader2, AlertCircle } from "lucide-react";
 
 export default function PhoneNumbers() {
   const [numbers, setNumbers] = useState<PhoneNumber[]>([]);

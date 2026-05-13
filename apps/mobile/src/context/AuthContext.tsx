@@ -6,6 +6,9 @@ interface User {
   id: string;
   name: string;
   phone: string;
+  apiKey?: string;
+  telegramChatId?: string | null;
+  telegramUsername?: string | null;
 }
 
 interface AuthContextType {

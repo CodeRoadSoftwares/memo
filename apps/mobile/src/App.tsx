@@ -8,6 +8,7 @@ import Chat from "./pages/Chat";
 import LinkWhatsApp from "./pages/LinkWhatsApp";
 import PhoneNumbers from "./pages/PhoneNumbers";
 import Skills from "./pages/Skills";
+import LinkTelegram from "./pages/LinkTelegram";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -67,6 +68,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <LinkWhatsApp />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/link-telegram"
+        element={
+          <ProtectedRoute>
+            <LinkTelegram />
           </ProtectedRoute>
         }
       />

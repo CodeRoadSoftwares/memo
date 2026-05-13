@@ -5,6 +5,7 @@ import { whatsappRoutes } from "./modules/whatsapp/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { skillRoutes } from "./modules/skills/routes.js";
 import { phoneNumberRoutes } from "./modules/phoneNumbers/routes.js";
+import { telegramRoutes } from "./modules/telegram/routes.js";
 import cookie from "@fastify/cookie";
 
 const app = Fastify({
@@ -30,6 +31,7 @@ app.register(authRoutes);
 app.register(skillRoutes);
 app.register(whatsappRoutes);
 app.register(phoneNumberRoutes);
+app.register(telegramRoutes);
 
 app.get("/", async () => {
   return {

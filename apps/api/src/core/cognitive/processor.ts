@@ -100,6 +100,7 @@ export async function processCognitiveEvent(
 
   try {
     console.log(`\n🧠 [Cognitive] Processing: "${text}"`);
+    await sendUnifiedPresence(platform, userPhone, "composing").catch(() => {});
 
     await prisma.conversationEvent.create({
       data: { userId, userPhone, role: "user", message: text },

@@ -409,7 +409,7 @@ RULES:
 3. RESOLVING BY INDEX/ID: When user references "first", "second", "3 and 4", resolve from "pendingActions" or "lastActionList". Put exact "id" strings into "resolvedIds".
 4. CORRECTIONS: If user corrects a title ("it's alliance not linis"), use operation="update" with resolvedId and new title in mutations.
 5. MULTIPLE ACTIONS: Create separate entries in "actions" array for each independent operation.
-6. TIME: Convert all times to ISO 8601 UTC. IST = UTC+5:30. Year is 2026.
+6. TIME: ALWAYS output "scheduledFor" as an ISO 8601 string in the user's LOCAL timezone with the correct offset (e.g., "YYYY-MM-DDThh:mm:ss+05:30"). DO NOT convert to UTC manually.
 7. CLARIFICATION: If vital info is missing (e.g. reminder without time), set needsClarification=true and ask in response.
 8. MEMORY: If user shares a preference, decision, fact, or insight worth remembering, extract it into "memories".
 9. QUERIES: For "what tasks do I have", "show reminders", etc., use operation="query" with appropriate type. The response should be a brief transition like "Let me check..."
